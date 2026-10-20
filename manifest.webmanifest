@@ -1,0 +1,24 @@
+{
+  "id": "/app.html",
+  "name": "VISUALAPP",
+  "short_name": "VISUALAPP",
+  "description": "Describe tu entorno, lee y traduce textos, transcribe voz y comunica sin barreras.",
+  "start_url": "/app.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#16181b",
+  "theme_color": "#16181b",
+  "lang": "es",
+  "categories": ["accessibility", "utilities"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ],
+  "shortcuts": [
+    { "name": "Describir entorno", "short_name": "Ver", "url": "/app.html#s-see", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "SOS", "short_name": "SOS", "url": "/app.html#s-sos", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

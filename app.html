@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+<title>VISUALAPP</title>
+<meta name="theme-color" content="#16181b">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icons/icon.svg">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="VISUALAPP">
+<link rel="stylesheet" href="/css/styles.css">
+<script src="/js/pages/motion.js"></script>
+</head>
+<body class="in-app" data-screen="s-see">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <filter id="f-rg"><feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0.7 -0.7 1 0 0  0 0 0 1 0"/></filter>
+  <filter id="f-by"><feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1 0"/><feColorMatrix type="matrix" values="1 0 0.7 0 -0.2  0 1 -0.7 0 0.1  0 0 1 0 0  0 0 0 1 0"/></filter>
+</svg>
+<div class="flash" id="flash" aria-hidden="true"></div>
+<header class="nav appbar"><div class="wrap">
+  <button class="btn plain back" data-back aria-label="Volver a la cámara"><svg class="ic" aria-hidden="true"><use href="/icons/sprite.svg#i-back"/></svg>Cámara</button>
+  <h2 class="top-title" id="top-title" aria-hidden="true"></h2>
+  <span class="brand" aria-hidden="true"><span class="logo"><svg class="ic"><use href="/icons/sprite.svg#i-logo"/></svg></span><span class="brand-name">VISUALAPP</span></span>
+</div></header>
+
+<div class="netbar" id="netbar" role="status" aria-live="polite" hidden></div>
+<div class="netbar vcbar" id="vc-last" hidden></div>
+<main class="wrap narrow app" id="main">
+
+  <!-- CÁMARA: la pantalla principal -->
+  <section class="screen cam-screen active" id="s-see" aria-labelledby="see-h">
+    <h1 class="sr-only" id="see-h">Cámara</h1>
+    <div class="cam" id="cam">
+      <video id="video" playsinline muted></video>
+      <canvas id="overlay"></canvas>
+      <div class="empty" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/icons/sprite.svg#i-cam"/></svg></div>
+      <span class="ring" aria-hidden="true"></span>
+    </div>
+    <div class="cam-top">
+      <div class="modes" id="see-modes" role="tablist" aria-label="Modo">
+        <button role="tab" data-mode="escena" aria-selected="true" tabindex="0">Escena</button>
+        <button role="tab" data-mode="texto" aria-selected="false" tabindex="-1">Texto</button>
+        <button role="tab" data-mode="medicina" aria-selected="false" tabindex="-1">Medicina</button>
+        <button role="tab" data-mode="color" aria-selected="false" tabindex="-1">Color</button>
+        <button role="tab" data-mode="traducir" aria-selected="false" tabindex="-1">Traducir</button>
+        <button role="tab" data-mode="alerta" aria-selected="false" tabindex="-1">Alerta</button>
+      </div>
+      <button class="round" id="btn-flip" aria-label="Cambiar cámara"><svg class="ic" aria-hidden="true"><use href="/icons/sprite.svg#i-flip"/></svg></button>
+    </div>
+    <div class="card med-result" id="med-result" hidden>
+      <div class="row sb"><h3>Medicina leída</h3><button class="btn sm plain" id="mr-close" aria-label="Cerrar"><svg class="ic" aria-hidden="true"><use href="/icons/sprite.svg#i-x"/></svg></button></div>
+      <p class="msg err" id="mr-warn" hidden>Atención: esta medicina está vencida. No la uses.</p>
+      <p id="mr-summary" class="big-out"></p>
+      <div class="two">
+        <div><label for="mr-name">Nombre</label><input id="mr-name"></div>
+        <div><label for="mr-dose">Dosis</label><input id="mr-dose"></div>
+        <div><label for="mr-form">Presentación</label><input id="mr-form"></div>
+        <div><label for="mr-expiry">Caducidad (AAAA-MM)</label><input id="mr-expiry" placeholder="2027-05" inputmode="numeric"></div>
+        <div><label for="mr-lot">Lote</label><input id="mr-lot"></div>
+        <div><label for="mr-barcode">Código de barras</label><input id="mr-barcode"></div>
+      </div>
+      <label for="mr-use">Para qué la uso (opcional)</label>
+      <input id="mr-use" placeholder="Ej.: dolor de cabeza">
+      <p class="mute" style="font-size:.85em;margin-top:10px">Información leída de la caja: puede tener errores. Verifica siempre con tu médico o farmacéutico.</p>
+      <div class="mt-12 row">
+        <button class="btn primary" id="mr-save">Guardar en mi botiquín</button>
+        <button class="btn" id="mr-say">Escuchar</button>
+        <button class="btn gray sm" id="mr-ai" hidden>Explicar con IA</button>
+      </div>
+    </div>
+    <div class="narr-card">
+      <div class="hud" id="hud" aria-live="off">Pulsa el ojo, abajo en el centro, para empezar a describir lo que tienes delante.</div>
+      <div id="see-status" class="msg ok" hidden></div>
+      <div class="cam-actions">
+        <button class="btn sm" id="btn-what" aria-label="¿Qué hay? Repite lo que veo" hidden>¿Qué hay?</button>
+        <button class="btn sm" id="btn-read" hidden>Leer texto</button>
+        <button class="btn sm" id="btn-detail" hidden>Describir a detalle</button>
+        <div class="row" id="color-row" hidden><span class="swatch" id="swatch"></span><span>Apunta al centro de la imagen.</span></div>
+        <div class="row" id="see-actions" hidden>
+          <button class="btn sm" id="a-reader">Abrir en el lector</button>
+          <button class="btn sm" id="a-translate">Traducir</button>
+        </div>
+      </div>
+      <div class="ai-status" aria-label="Estado de la IA"><span class="chip" id="chip-cam">Cámara apagada</span><span class="chip" id="chip-ai">IA sin cargar</span><span class="chip" id="chip-ocr">Lectura sin cargar</span></div>
+    </div>
+    <div class="cam-row" id="cam-row">
+      <button class="cam-side" id="btn-more" aria-label="Más funciones"><span class="disc" aria-hidden="true"><svg class="ic"><use href="/icons/sprite.svg#i-more"/></svg></span><span class="lbl">Más</span></button>
+      <button class="eye-btn" id="btn-cam" aria-pressed="false" aria-label="Escanear">
+        <span class="eye-ring" aria-hidden="true"></span>
+        <svg class="eye-svg" viewBox="0 0 120 120" aria-hidden="true">
+          <g class="eye-g">
+            <path class="eye-white" d="M8 60C28 28 92 28 112 60C92 92 28 92 8 60Z"/>
+            <g class="eye-look"><circle class="eye-iris" cx="60" cy="60" r="19"/><circle class="eye-pupil" cx="60" cy="60" r="8"/><circle class="eye-glint" cx="66" cy="54" r="3.5"/></g>
+            <path class="eye-lid" d="M8 60C28 28 92 28 112 60"/>
+          </g>
+        </svg>
+        <span class="eye-label" id="eye-label">Escanear</span>
+      </button>
+      <button class="cam-side sos-go" id="cam-sos" aria-label="SOS, pedir ayuda"><span class="disc" aria-hidden="true"><svg class="ic"><use href="/icons/sprite.svg#i-sos"/></svg></span><span class="lbl">SOS</span></button>
+    </div>
+    <aside class="cam-log" aria-labelledby="log-h">
+      <h3 id="log-h">Lo que he dicho</h3>
+      <ul class="list log" id="see-log" aria-live="off"><li><small>Aquí aparecerá la narración.</small></li></ul>
+    </aside>
+    <p id="narr-live" class="sr-only" aria-live="polite"></p>
+    <p id="narr-alert" class="sr-only" aria-live="assertive"></p>
+    <div class="panel" id="panel" data-pos="closed">
+      <button class="panel-tab" id="panel-tab" aria-expanded="false" aria-controls="panel-body"><span class="grip" aria-hidden="true"></span><span>Herramientas</span><span class="sr-only" id="panel-tab-sr"></span></button>
+      <div class="panel-body" id="panel-body" role="region" aria-label="Herramientas">
+        <div id="panel-notes">
+          <div id="med-banner" class="med-banner" hidden role="status"></div>
+          <div class="card flat onb" id="onb" hidden>
+            <h3>Prepara tu app</h3>
+            <ul class="checks" id="onb-list">
+              <li data-k="perm"><span class="tick" aria-hidden="true"></span><span>Cámara y micrófono</span><button class="btn sm primary" id="onb-perm">Permitir</button></li>
+              <li data-k="sos"><span class="tick" aria-hidden="true"></span><span>Contacto SOS</span><button class="btn sm primary" id="onb-sos">Agregar</button></li>
+            </ul>
+            <button class="btn sm plain" id="onb-done">Ocultar</button>
+          </div>
+          <div class="card flat" id="ios-tip" hidden><h3>Instalar en iPhone</h3><p class="mute">Toca Compartir y luego «Agregar a pantalla de inicio». Después podrás usarla sin internet.</p></div>
+          <div class="card flat" id="ai-dl" hidden><h3>Preparando uso sin internet</h3><p class="mute" id="ai-dl-t">Descargando la IA en tu dispositivo…</p><div class="mt-12 meter"><i id="ai-dl-bar"></i></div></div>
+        </div>
+        <div id="panel-half">
+          <h2 class="panel-h" tabindex="-1">Herramientas</h2>
+          <div class="tiles" id="panel-main"></div>
+          <h3 class="panel-sub" id="panel-sub">Recordar y ayuda</h3>
+          <div class="tiles" id="panel-more-tiles"></div>
+          <button class="btn block panel-all" id="panel-more">Mostrar más funciones</button>
+        </div>
+        <div id="panel-full" hidden>
+          <button class="btn plain sm" id="panel-back" aria-label="Volver a herramientas"><svg class="ic" aria-hidden="true"><use href="/icons/sprite.svg#i-back"/></svg> Volver</button>
+          <h2 class="panel-h" tabindex="-1">Todas las funciones</h2>
+          <div class="search"><svg class="ic" aria-hidden="true"><use href="/icons/sprite.svg#i-search"/></svg><input id="fn-search" type="search" placeholder="Buscar función…" aria-label="Buscar función" autocomplete="off"></div>
+          <div id="fn-list"></div>
+          <div id="panel-account">
+            <h3 class="panel-sub">Más opciones</h3>
+            <div class="acct">
+              <button class="btn gray" id="vc-toggle" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="/icons/sprite.svg#i-mic"/></svg><span>Control por voz</span></button>
+              <a class="btn gray" id="admin-link" href="/admin.html" hidden>Administración</a>
+              <button class="btn gray" id="logout">Cerrar sesión</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LUPA -->
+  <section class="screen" id="s-lupa">
+    <h1 class="large-title">Lupa</h1>
+    <p class="sub">Agranda, mejora el contraste y realza colores. Útil para leer letra pequeña.</p>
+    <div class="cam lupa" id="lupa-cam">
+      <video id="lupa-video" playsinline muted></video>
+      <div class="empty" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/icons/sprite.svg#i-lupa"/></svg></div>
+    </div>
+    <div class="mt-14 row">
+      <button class="btn primary" id="lupa-go" style="flex:1">Abrir lupa</button>
+      <button class="btn" id="lupa-freeze">Congelar</button>
+      <button class="btn gray" id="lupa-torch" aria-pressed="false" hidden><svg class="ic" aria-hidden="true"><use href="/icons/sprite.svg#i-torch"/></svg> Luz</button>
+      <button class="btn gray" id="lupa-color">Decir color</button>
+    </div>
+    <div class="mt-14 card">
+      <label for="lupa-zoom" style="margin-top:0">Zoom: <b id="lupa-zoom-v">1.0×</b></label>
+      <input id="lupa-zoom" type="range" min="1" max="6" step="0.1" value="1">
+      <label for="lupa-filter">Filtro</label>
+      <select id="lupa-filter">
+        <option value="normal">Normal</option>
+        <option value="contraste">Alto contraste</option>
+        <option value="invertido">Invertido (letras claras sobre oscuro)</option>
+        <option value="gris">Blanco y negro</option>
+        <option value="amarillo">Amarillo sobre negro</option>
+        <option value="rojoverde">Realce rojo-verde (daltonismo)</option>
+        <option value="azulamarillo">Realce azul-amarillo (daltonismo)</option>
+      </select>
+      <p class="mute" style="font-size:.85em;margin-top:10px">Los realces de color ayudan a distinguir tonos; no corrigen la visión.</p>
+    </div>
+  </section>
+
+  <!-- OÍR -->
+  <section class="screen" id="s-voice">
+    <h1 class="large-title">Oír</h1>
+    <div class="seg" id="voice-tabs" style="margin-bottom:14px">
+      <button data-v="text" aria-selected="true">Voz a texto</button>
+      <button data-v="sound" aria-selected="false">Sonidos</button>
+      <button data-v="amp" aria-selected="false">Amplificar</button>
+    </div>
+    <div id="v-text">
+      <div class="transcript" id="transcript" aria-live="polite"><span class="interim">Pulsa «Escuchar» y la conversación aparecerá aquí.</span></div>
+      <div class="mt-14 row">
+        <button class="btn primary" id="btn-listen" style="flex:1">Escuchar</button>
+        <button class="btn gray" id="btn-clear">Limpiar</button>
+        <button class="btn gray" id="btn-copy">Copiar</button>
+      </div>
+    </div>
+    <div id="v-sound" hidden>
+      <div class="card">
+        <h3 id="snd-title">Detector de sonidos</h3>
+        <p class="mute" id="snd-desc">Avisa con vibración y destello cuando hay un sonido fuerte (timbre, alarma, golpe, claxon).</p>
+        <div class="meter" aria-hidden="true" style="margin:16px 0"><i id="snd-bar"></i></div>
+        <button class="btn primary block" id="btn-snd">Activar</button>
+        <label for="snd-sens">Sensibilidad</label>
+        <input id="snd-sens" type="range" min="1" max="10" value="5">
+      </div>
+      <ul class="mt-14 list" id="snd-log"></ul>
+    </div>
+    <div id="v-amp" hidden>
+      <div class="card">
+        <h3>Amplificador de sonido</h3>
+        <p class="mute">Capta el sonido del ambiente y lo sube en tus auriculares, realzando las voces.</p>
+        <p class="mt-12 msg err">Usa auriculares. Sin ellos se producirá un pitido.</p>
+        <div class="meter" aria-hidden="true" style="margin:16px 0"><i id="amp-bar"></i></div>
+        <button class="btn primary block" id="amp-go">Activar amplificador</button>
+        <label for="amp-gain">Volumen: <b id="amp-gain-v">3.0×</b></label>
+        <input id="amp-gain" type="range" min="1" max="6" step="0.5" value="3">
+      </div>
+    </div>
+  </section>
+
+  <!-- TRADUCIR -->
+  <section class="screen" id="s-translate">
+    <h1 class="large-title">Traducir</h1>
+    <div class="card">
+      <div class="row nowrap">
+        <select id="tr-from" aria-label="Idioma de origen"></select>
+        <button class="btn gray" id="tr-swap" aria-label="Intercambiar idiomas"><svg class="ic" aria-hidden="true"><use href="/icons/sprite.svg#i-swap"/></svg></button>
+        <select id="tr-to" aria-label="Idioma de destino"></select>
+      </div>
+      <label for="tr-in">Texto</label>
+      <textarea id="tr-in" placeholder="Escribe o usa el micrófono…" style="min-height:100px"></textarea>
+      <div class="mt-12 row">
+        <button class="btn primary" id="tr-go" style="flex:1">Traducir</button>
+        <button class="btn" id="tr-mic"><svg class="ic" aria-hidden="true"><use href="/icons/sprite.svg#i-mic"/></svg> Dictar</button>
+        <button class="btn gray" id="tr-cam"><svg class="ic" aria-hidden="true"><use href="/icons/sprite.svg#i-cam"/></svg> Cámara</button>
+      </div>
+    </div>
+    <div class="mt-14 card">
+      <div class="mute" style="font-size:.85em;font-weight:600">TRADUCCIÓN</div>
+      <div class="big-out" id="tr-out" aria-live="polite">—</div>
+      <div class="mt-12 row"><button class="btn" id="tr-say"><svg class="ic" aria-hidden="true"><use href="/icons/sprite.svg#i-sound"/></svg> Escuchar</button></div>
+    </div>
+    <label class="check" style="margin-top:14px;background:var(--surface);padding:14px 18px;border-radius:var(--r)">Modo conversación (traduce y habla automáticamente)<input type="checkbox" id="tr-conv"></label>
+    <div id="tr-msg"></div>
+  </section>
+
+  <!-- LECTOR -->
+  <section class="screen" id="s-reader">
+    <h1 class="large-title">Lector</h1>
+    <p class="sub">Texto cómodo de leer, con la palabra resaltada mientras suena.</p>
+    <textarea id="rd-in" placeholder="Pega o escribe un texto aquí…"></textarea>
+    <div class="mt-12 row">
+      <button class="btn primary" id="rd-play" style="flex:1"><svg class="ic" aria-hidden="true"><use href="/icons/sprite.svg#i-play"/></svg> Leer</button>
+      <button class="btn gray" id="rd-stop"><svg class="ic" aria-hidden="true"><use href="/icons/sprite.svg#i-stop"/></svg> Detener</button>
+      <button class="btn gray" id="rd-cam"><svg class="ic" aria-hidden="true"><use href="/icons/sprite.svg#i-cam"/></svg> Escanear</button>
+    </div>
+    <div class="mt-14 card">
+      <label for="rd-font" style="margin-top:0">Fuente</label>
+      <select id="rd-font"><option value="">Sistema</option><option value="Verdana,Tahoma,sans-serif">Legible (Verdana)</option><option value="'Comic Sans MS','Chalkboard SE',sans-serif">Redondeada</option><option value="Georgia,serif">Serif</option></select>
+      <label for="rd-ls">Espaciado entre letras</label><input id="rd-ls" type="range" min="0" max="12" value="4">
+      <label for="rd-lh">Interlineado</label><input id="rd-lh" type="range" min="12" max="28" value="19">
+      <label for="rd-bg">Fondo</label>
+      <select id="rd-bg"><option value="">Normal</option><option value="#fbf3dc|#222">Crema (suave)</option><option value="#dff1fb|#111">Azul claro</option><option value="#111|#ffd60a">Negro / amarillo</option></select>
+    </div>
+    <div class="mt-14 reader" id="rd-out" aria-live="off"></div>
+  </section>
+
+  <!-- COMUNICAR -->
+  <section class="screen" id="s-aac">
+    <h1 class="large-title">Comunicar</h1>
+    <div class="card flat" style="margin-bottom:14px"><div class="big-out" id="aac-out" aria-live="polite">Toca una tarjeta para hablar</div></div>
+    <div class="seg" id="aac-cats" style="margin-bottom:14px"></div>
+    <div class="aac" id="aac-grid"></div>
+    <div class="mt-18 card" id="aac-add-card">
+      <h3>Agregar frase propia</h3>
+      <form id="f-phrase" class="mt-8 row nowrap">
+        <input id="ph-emoji" placeholder="😀" style="width:70px;text-align:center" aria-label="Emoji" maxlength="4">
+        <input id="ph-text" placeholder="Frase" aria-label="Frase" required>
+        <button class="btn primary">Agregar</button>
+      </form>
+      <div id="ph-msg"></div>
+    </div>
+  </section>
+
+  <!-- RECORDATORIOS -->
+  <section class="screen" id="s-remind">
+    <h1 class="large-title">Rutinas</h1>
+    <p class="sub">Recordatorios con voz y vibración. En la app instalada suenan aunque esté cerrada.</p>
+    <form id="f-remind" class="card row nowrap" style="align-items:flex-end">
+      <div style="flex:1"><label for="rm-title" style="margin-top:0">Qué</label><input id="rm-title" placeholder="Tomar medicina" required></div>
+      <div><label for="rm-time" style="margin-top:0">Hora</label><input id="rm-time" type="time" required></div>
+      <button class="btn primary" aria-label="Agregar recordatorio"><svg class="ic" aria-hidden="true"><use href="/icons/sprite.svg#i-plus"/></svg></button>
+    </form>
+    <div id="rm-msg"></div>
+    <ul class="mt-14 list" id="rm-list"></ul>
+    <button class="mt-12 btn gray sm" id="rm-notif">Activar notificaciones</button>
+  </section>
+
+  <!-- SOS -->
+  <section class="screen" id="s-sos">
+    <h1 class="large-title">SOS</h1>
+    <button class="btn danger sos" id="btn-sos"><svg class="ic" aria-hidden="true"><use href="/icons/sprite.svg#i-sos"/></svg> Pedir ayuda ahora</button>
+    <div id="sos-out" class="msg ok" hidden></div>
+    <h3 style="margin:24px 0 10px">Contactos de emergencia</h3>
+    <ul class="list" id="contacts"></ul>
+    <form id="f-contact" class="card row nowrap" style="margin-top:14px;">
+      <input id="c-name" placeholder="Nombre" aria-label="Nombre del contacto" required>
+      <input id="c-phone" placeholder="Teléfono" inputmode="tel" aria-label="Teléfono" required>
+      <button class="btn primary" aria-label="Agregar contacto"><svg class="ic" aria-hidden="true"><use href="/icons/sprite.svg#i-plus"/></svg></button>
+    </form>
+    <div id="c-msg"></div>
+  </section>
+
+  <!-- DÓNDE ESTOY -->
+  <section class="screen" id="s-where">
+    <h1 class="large-title">¿Dónde estoy?</h1>
+    <div class="card">
+      <div class="big-out" id="wh-out" aria-live="polite">Pulsa el botón para conocer tu ubicación.</div>
+      <p class="mute" id="wh-acc"></p>
+      <button class="btn primary block" id="wh-go">Decirme dónde estoy</button>
+    </div>
+  </section>
+
+  <!-- MIS PERSONAS -->
+  <section class="screen" id="s-people">
+    <h1 class="large-title">Mis personas</h1>
+    <p class="sub">Familiares y cuidadores: quién es cada uno y cómo llamarlos.</p>
+    <ul class="list" id="pe-list"></ul>
+    <form id="f-person" class="mt-14 card">
+      <h3>Agregar persona</h3>
+      <div class="two">
+        <div><label for="pe-name">Nombre</label><input id="pe-name" required></div>
+        <div><label for="pe-rel">Parentesco</label><input id="pe-rel" placeholder="Hija, vecino, doctora…"></div>
+        <div><label for="pe-phone">Teléfono</label><input id="pe-phone" inputmode="tel"></div>
+        <div><label for="pe-note">Nota</label><input id="pe-note" placeholder="Viene los domingos"></div>
+      </div>
+      <button class="mt-14 btn primary">Guardar persona</button>
+      <div id="pe-msg"></div>
+    </form>
+  </section>
+
+  <!-- ¿QUIÉN SOY? -->
+  <section class="screen" id="s-id">
+    <h1 class="large-title">¿Quién soy?</h1>
+    <p class="sub">Tu ficha personal y de salud, lista para mostrar o escuchar.</p>
+    <button class="btn danger sos" id="id-lost"><svg class="ic" aria-hidden="true"><use href="/icons/sprite.svg#i-pin"/></svg> Estoy perdido</button>
+    <div id="lost-out" class="msg ok" hidden></div>
+    <div class="mt-14 card">
+      <div id="id-card"></div>
+      <div class="mt-12 row"><button class="btn" id="id-say"><svg class="ic" aria-hidden="true"><use href="/icons/sprite.svg#i-sound"/></svg> Escuchar mi ficha</button></div>
+    </div>
+    <form id="f-medical" class="mt-14 card">
+      <h3>Editar ficha</h3>
+      <div class="two">
+        <div><label for="md-full_name">Nombre completo</label><input id="md-full_name"></div>
+        <div><label for="md-birth">Nacimiento</label><input id="md-birth" placeholder="12/03/1950"></div>
+        <div><label for="md-blood">Tipo de sangre</label><input id="md-blood" placeholder="O+"></div>
+        <div><label for="md-address">Dirección de casa</label><input id="md-address"></div>
+      </div>
+      <label for="md-allergies">Alergias</label><input id="md-allergies">
+      <label for="md-conditions">Condiciones de salud</label><input id="md-conditions">
+      <label for="md-medications">Medicinas que tomo</label><input id="md-medications">
+      <label for="md-notes">Notas importantes</label><input id="md-notes">
+      <button class="mt-14 btn primary">Guardar ficha</button>
+      <div id="md-msg"></div>
+    </form>
+  </section>
+
+  <!-- CRISIS -->
+  <section class="screen" id="s-crisis">
+    <h1 class="large-title">Registro de crisis</h1>
+    <p class="sub">Cronometra una crisis (por ejemplo convulsiva) y guarda cuánto duró.</p>
+    <div class="card center">
+      <div class="timer" id="cr-timer" aria-live="off">00:00</div>
+      <div class="row" style="justify-content:center;margin-top:12px">
+        <button class="btn primary lg" id="cr-start">Iniciar crisis</button>
+        <button class="btn danger lg" id="cr-help">Pedir ayuda</button>
+      </div>
+      <label for="cr-note" style="text-align:left">Nota (opcional)</label>
+      <input id="cr-note" placeholder="Qué pasó antes, cómo se recuperó…">
+      <div id="cr-msg"></div>
+    </div>
+    <h3 style="margin:24px 0 10px">Qué hacer</h3>
+    <ul class="list" id="cr-guide"></ul>
+    <div class="mt-12 row"><button class="btn gray sm" id="cr-say">Escuchar la guía</button></div>
+    <p class="mute" style="font-size:.85em;margin-top:10px">Guía orientativa. No sustituye la atención médica de urgencia.</p>
+    <h3 style="margin:24px 0 10px">Historial</h3>
+    <ul class="list" id="cr-list"></ul>
+  </section>
+
+  <!-- CALMA -->
+  <section class="screen" id="s-calm">
+    <h1 class="large-title">Calma</h1>
+    <p class="sub">Respira al ritmo del círculo. Útil en ansiedad o sobrecarga sensorial.</p>
+    <div class="card center">
+      <div class="calm-wrap"><div class="calm-circle" id="calm-circle"></div></div>
+      <div class="big-out" id="calm-text" aria-live="polite">Respira conmigo</div>
+      <div class="row" style="justify-content:center;margin-top:16px">
+        <button class="btn primary lg" id="calm-start">Empezar</button>
+        <button class="btn lg" id="calm-quiet">Necesito silencio</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- MEDICINAS -->
+  <section class="screen" id="s-med">
+    <h1 class="large-title">Mi botiquín</h1>
+    <p class="sub">Escanea cajas, revisa caducidades y crea recordatorios.</p>
+    <button class="btn primary lg block" id="med-scan"><svg class="ic" aria-hidden="true"><use href="/icons/sprite.svg#i-pill"/></svg> Escanear una medicina</button>
+    <ul class="mt-14 list" id="med-list"></ul>
+    <form id="f-med" class="mt-14 card">
+      <h3>Agregar a mano</h3>
+      <div class="two">
+        <div><label for="mm-name">Nombre</label><input id="mm-name" required></div>
+        <div><label for="mm-dose">Dosis</label><input id="mm-dose" placeholder="500 mg"></div>
+        <div><label for="mm-form">Presentación</label><input id="mm-form" placeholder="tabletas"></div>
+        <div><label for="mm-expiry">Caducidad (AAAA-MM)</label><input id="mm-expiry" placeholder="2027-05" inputmode="numeric"></div>
+      </div>
+      <label for="mm-use">Para qué la uso</label><input id="mm-use">
+      <button class="mt-14 btn primary">Guardar</button>
+      <div id="mm-msg"></div>
+    </form>
+    <p class="mute" style="font-size:.85em;margin-top:14px">Información orientativa. No sustituye a tu médico o farmacéutico.</p>
+  </section>
+
+  <!-- HISTORIAL -->
+  <section class="screen" id="s-hist">
+    <h1 class="large-title">Historial</h1>
+    <div class="card" id="stats" style="margin-bottom:14px"></div>
+    <ul class="list" id="history"></ul>
+    <div class="mt-14 row">
+      <button class="btn gray sm" id="h-more">Ver más</button>
+      <button class="btn danger sm" id="h-del">Borrar historial</button>
+    </div>
+  </section>
+
+  <!-- AJUSTES -->
+  <section class="screen" id="s-set">
+    <h1 class="large-title">Ajustes</h1>
+    <div class="card">
+      <h3>Voz y pantalla</h3>
+      <label for="s-rate">Velocidad de voz: <b id="s-rate-v"></b></label>
+      <input id="s-rate" type="range" min="0.5" max="2" step="0.1">
+      <label for="s-font">Tamaño de letra: <b id="s-font-v"></b> px</label>
+      <input id="s-font" type="range" min="14" max="32" step="1">
+      <label for="u-theme">Tema</label>
+      <select id="u-theme"><option value="auto">Automático</option><option value="dark">Oscuro</option><option value="light">Claro</option></select>
+      <label class="mt-12 check">Alto contraste<input id="s-con" type="checkbox"></label>
+      <label class="check">Vibración y destellos<input id="s-vib" type="checkbox"></label>
+      <label class="check" style="border:0">Modo simple (menos opciones)<input id="s-simple" type="checkbox"></label>
+      <div class="mt-14 row">
+        <button class="btn primary" id="s-save">Guardar</button>
+        <button class="btn gray" id="s-test"><svg class="ic" aria-hidden="true"><use href="/icons/sprite.svg#i-sound"/></svg> Probar voz</button>
+      </div>
+      <div id="s-msg"></div>
+    </div>
+    <div class="mt-14 card">
+      <h3>Narración</h3>
+      <label for="s-narr">Nivel de detalle</label>
+      <select id="s-narr"><option value="breve">Breve</option><option value="normal">Normal</option><option value="detallado">Detallado</option></select>
+      <p class="mute">Breve: solo qué hay y dónde. Normal: también el color de la ropa y lo que lleva la persona. Detallado: todo, y avisa de cada cambio.</p>
+    </div>
+    <div class="mt-14 card">
+      <h3>Accesibilidad motriz y sensorial</h3>
+      <label class="check">Botones grandes<input id="u-big" type="checkbox"></label>
+      <label class="check">Filtro de temblor (ignora toques repetidos)<input id="u-tremor" type="checkbox"></label>
+      <label class="check">Modo de barrido (un solo toque)<input id="u-scan" type="checkbox"></label>
+      <label class="check" style="border:0">Modo seguro: sin destellos ni movimiento intenso<input id="u-safe" type="checkbox"></label>
+    </div>
+    <div class="mt-14 card">
+      <h3>Mis datos</h3>
+      <p class="mute">Guarda una copia de tus datos o restáurala en otro dispositivo.</p>
+      <div class="mt-12 row">
+        <button class="btn" id="d-export"><svg class="ic" aria-hidden="true"><use href="/icons/sprite.svg#i-download"/></svg> Exportar</button>
+        <label class="btn gray" style="margin:0;cursor:pointer"><svg class="ic" aria-hidden="true"><use href="/icons/sprite.svg#i-upload"/></svg> Importar<input id="d-import" type="file" accept="application/json" hidden></label>
+      </div>
+      <div id="d-msg"></div>
+    </div>
+    <div class="mt-14 card">
+      <h3>Diagnóstico</h3>
+      <p class="mute">Si algo no funciona, aquí ves qué parte falla. «Copiar informe» sirve para pedir ayuda.</p>
+      <ul class="list diag mt-12" id="diag-list"></ul>
+      <div class="mt-12 row">
+        <button class="btn" id="diag-retry">Reintentar</button>
+        <button class="btn gray" id="diag-copy">Copiar informe</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="quiet" id="quiet" hidden role="dialog" aria-label="Necesito silencio"><div><b>Necesito silencio</b><p>Por favor, hablen bajo y denme un momento.</p><small>Toca para cerrar</small></div></div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="/js/core/store.js"></script>
+<script src="/js/core/healthschema.js"></script>
+<script src="/js/core/localapi.js"></script>
+<script src="/js/core/api.js"></script>
+<script src="/js/core/tts.js"></script>
+<script src="/js/core/speech.js"></script>
+<script src="/js/ai/scene.js"></script>
+<script src="/js/ai/ocr.js"></script>
+<script src="/js/ai/medparse.js"></script>
+<script src="/js/ai/guard.js"></script>
+<script src="/js/ai/camera.js"></script>
+<script src="/js/ai/scanner.js"></script>
+<script src="/js/features/tools.js"></script>
+<script src="/js/features/magnifier.js"></script>
+<script src="/js/features/amplifier.js"></script>
+<script src="/js/features/health.js"></script>
+<script src="/js/features/medicinas.js"></script>
+<script src="/js/features/a11y.js"></script>
+<script src="/js/features/voicecontrol.js"></script>
+<script src="/js/ui/catalog.js"></script>
+<script src="/js/ui/gestures.js"></script>
+<script src="/js/ui/panel.js"></script>
+<script src="/js/ui/nav.js"></script>
+<script src="/js/features/diagnostico.js"></script>
+<script src="/js/pages/app.js"></script>
+<script src="/js/pages/intro.js"></script>
+</body>
+</html>

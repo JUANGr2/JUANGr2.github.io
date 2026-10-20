@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+<title>Administración · VISUALAPP</title>
+<meta name="theme-color" content="#16181b">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icons/icon.svg">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="VISUALAPP">
+<link rel="stylesheet" href="/css/styles.css">
+<script src="/js/pages/motion.js"></script>
+</head>
+<body>
+<header class="nav"><div class="wrap">
+  <a class="brand" href="/"><span class="logo" aria-hidden="true"><svg class="ic"><use href="/icons/sprite.svg#i-logo"/></svg></span>Admin</a>
+  <div class="links"><a class="btn plain sm" href="/app.html">Ver app</a><button class="btn plain sm" id="logout">Salir</button></div>
+</div></header>
+<main class="wrap" style="padding-bottom:60px">
+  <h1 class="large-title">Panel de administración</h1>
+  <div class="seg" role="tablist" aria-label="Secciones" style="margin:14px 0">
+    <button data-t="t-dash" aria-selected="true">Resumen</button>
+    <button data-t="t-users" aria-selected="false">Usuarios</button>
+    <button data-t="t-scans" aria-selected="false">Actividad</button>
+    <button data-t="t-audit" aria-selected="false">Auditoría</button>
+  </div>
+  <div id="note" role="status" aria-live="polite"></div>
+
+  <section class="screen active" id="t-dash">
+    <div class="kpis" id="kpis"></div>
+    <div class="grid w" style="margin-top:16px">
+      <div class="card"><h3>Registros últimos 7 días</h3><div id="perday"></div></div>
+      <div class="card"><h3>Lo más detectado</h3><div id="toplabels"></div></div>
+      <div class="card"><h3>Usuarios por perfil</h3><div id="bydis"></div></div>
+    </div>
+  </section>
+
+  <section class="screen" id="t-users">
+    <div class="row nowrap" style="margin-bottom:12px;">
+      <input id="q" placeholder="Buscar por nombre o correo" aria-label="Buscar usuarios">
+      <button class="btn primary" id="q-go">Buscar</button>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Nombre</th><th>Correo</th><th>Perfil</th><th>Rol</th><th>Registros</th><th>Estado</th><th>Acciones</th></tr></thead>
+      <tbody id="users"></tbody>
+    </table></div>
+    <div class="mt-12 row"><button class="btn gray sm" id="u-prev">←</button><span id="u-page" class="mute"></span><button class="btn gray sm" id="u-next">→</button></div>
+  </section>
+
+  <section class="screen" id="t-scans">
+    <div class="row" style="margin-bottom:12px"><a class="btn primary sm" href="/api/admin/scans.csv">Exportar CSV</a></div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Fecha</th><th>Usuario</th><th>Tipo</th><th>Resultado</th></tr></thead>
+      <tbody id="scans"></tbody>
+    </table></div>
+  </section>
+
+  <section class="screen" id="t-audit">
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Fecha</th><th>Actor</th><th>Acción</th><th>Detalle</th></tr></thead>
+      <tbody id="audit"></tbody>
+    </table></div>
+  </section>
+</main>
+<script src="/js/core/store.js"></script>
+<script src="/js/core/localapi.js"></script>
+<script src="/js/core/api.js"></script>
+<script src="/js/pages/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="es" data-page="landing">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+<title>VISUALAPP · Ver, oír y hablar, sin barreras</title>
+<meta name="theme-color" content="#16181b">
+<meta name="description" content="VISUALAPP es una app para personas con discapacidad visual, auditiva o del habla: te dice lo que tienes enfrente, escribe lo que otros dicen y habla por ti. Funciona sin internet.">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icons/icon.svg">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="VISUALAPP">
+<link rel="preload" href="/vendor/fonts/atkinson-next-wght.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="modulepreload" href="/vendor/three/three.module.min.js">
+<link rel="stylesheet" href="/css/styles.css">
+<script src="/js/pages/motion.js"></script>
+</head>
+<body class="landing">
+<a class="skip" href="#main">Saltar al contenido</a>
+<canvas class="walk" id="walk" aria-hidden="true"></canvas>
+<div class="walk-labels" id="walk-labels" aria-hidden="true"></div>
+
+<header class="top" id="top">
+  <a class="brand" href="/" aria-label="VISUALAPP, inicio">
+    <svg class="mark" viewBox="0 0 46 32" aria-hidden="true">
+      <g class="mk-eye"><path class="mk-lid" d="M2 16C8 6 24 6 30 16C24 26 8 26 2 16Z"/><circle class="mk-pupil" cx="16" cy="16" r="4.6"/></g>
+      <path class="mk-arc a1" d="M33.5 12.5A5 5 0 0 1 33.5 19.5"/>
+      <path class="mk-arc a2" d="M36.4 9.6A9 9 0 0 1 36.4 22.4"/>
+      <path class="mk-arc a3" d="M39.2 6.8A13 13 0 0 1 39.2 25.2"/>
+    </svg>
+    <span class="wordmark">VISUALAPP</span>
+  </a>
+  <div class="top-actions">
+    <button type="button" class="aa-btn" id="aa-btn" aria-expanded="false" aria-controls="aa-panel"><span aria-hidden="true">Aa</span><span class="sr">Ajustes de lectura</span></button>
+    <a class="enter" href="/login.html" id="cta-nav">Entrar</a>
+    <button type="button" class="menu-btn" id="menu-btn" aria-expanded="false" aria-controls="menu">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path class="mb-top" d="M4 8h16"/><path class="mb-bot" d="M4 16h16"/></svg>
+      <span class="sr" id="menu-label">Abrir menú</span>
+    </button>
+  </div>
+  <div class="aa-panel" id="aa-panel" role="group" aria-label="Ajustes de lectura de esta página">
+    <p class="aa-title" aria-hidden="true">Ajustes de lectura</p>
+    <div class="theme" role="radiogroup" aria-label="Tema">
+      <button type="button" role="radio" data-theme-set="dark" aria-checked="true">Noche</button>
+      <button type="button" role="radio" data-theme-set="light" aria-checked="false">Día</button>
+    </div>
+    <div class="fs" role="group" aria-label="Tamaño de letra">
+      <button type="button" class="pill" id="fs-down" aria-label="Reducir el tamaño de letra">A−</button>
+      <output id="fs-val" aria-live="polite">100 %</output>
+      <button type="button" class="pill" id="fs-up" aria-label="Aumentar el tamaño de letra">A+</button>
+    </div>
+    <button type="button" class="switch" data-pref="hc" aria-pressed="false"><span>Alto contraste</span><i aria-hidden="true"></i></button>
+    <button type="button" class="switch" data-pref="calm" aria-pressed="false"><span>Modo calma</span><i aria-hidden="true"></i></button>
+  </div>
+  <div class="progress" aria-hidden="true"><i id="progress"></i></div>
+</header>
+
+<div class="menu" id="menu" role="dialog" aria-modal="true" aria-label="Menú del recorrido" hidden>
+  <nav aria-label="Paradas del recorrido">
+    <ol class="menu-stops">
+      <li><a href="#inicio">Inicio</a></li>
+      <li><a href="#personas">Para quién es</a></li>
+      <li><a href="#ver">Ver</a></li>
+      <li><a href="#esquina">La esquina en miniatura</a></li>
+      <li><a href="#leer">Leer</a></li>
+      <li><a href="#oir">Oír</a></li>
+      <li><a href="#hablar">Hablar</a></li>
+      <li><a href="#ayuda">Pedir ayuda</a></li>
+      <li><a href="#medida">A tu medida</a></li>
+      <li><a href="#datos">Tus datos</a></li>
+      <li><a href="#dudas">Dudas</a></li>
+    </ol>
+  </nav>
+  <div class="menu-cta">
+    <a class="tile-btn" href="/login.html?registro=1"><span>Crear cuenta</span></a>
+    <a class="guide-link" href="/login.html">Entrar</a>
+    <button type="button" class="guide-link" id="install" hidden>Instalar la app</button>
+    <a class="guide-link apk-dl" href="https://github.com/JUANGr2/JUANGr2.github.io/releases/latest/download/visualapp.apk" download>Descargar para Android</a>
+  </div>
+</div>
+
+<nav class="rail" id="rail" aria-label="Paradas del recorrido">
+  <a href="#inicio"><span>Inicio</span></a>
+  <a href="#personas"><span>Para quién es</span></a>
+  <a href="#ver"><span>Ver</span></a>
+  <a href="#esquina"><span>La esquina</span></a>
+  <a href="#leer"><span>Leer</span></a>
+  <a href="#oir"><span>Oír</span></a>
+  <a href="#hablar"><span>Hablar</span></a>
+  <a href="#ayuda"><span>Pedir ayuda</span></a>
+  <a href="#medida"><span>A tu medida</span></a>
+  <a href="#datos"><span>Tus datos</span></a>
+  <a href="#empieza"><span>Empieza</span></a>
+</nav>
+
+<main id="main">
+  <section class="stop hero" id="inicio" data-stop data-shape="eye" aria-labelledby="hero-h">
+    <div class="panel">
+      <h1 id="hero-h" class="split">Ver, oír y hablar, sin barreras.</h1>
+      <p class="lede">VISUALAPP es una app para personas con discapacidad visual, auditiva o del habla. Te dice lo que tienes enfrente, escribe lo que otros dicen y habla por ti. Funciona en tu celular, también sin internet.</p>
+      <div class="actions">
+        <a class="tile-btn" href="/login.html?registro=1"><span>Crear cuenta</span></a>
+        <a class="guide-link apk-dl" href="https://github.com/JUANGr2/JUANGr2.github.io/releases/latest/download/visualapp.apk" download>Descargar para Android</a>
+        <a class="guide-link" href="#personas">Empezar el recorrido</a>
+      </div>
+      <p class="hint">Mueve el cursor o el dedo: el ojo te sigue. Baja para recorrer la línea guía.</p>
+    </div>
+  </section>
+
+  <section class="stop" id="personas" data-stop data-shape="people" aria-labelledby="per-h">
+    <div class="panel">
+      <h2 id="per-h">1 de cada 6 personas en el mundo vive con una discapacidad.</h2>
+      <p>Para ellas hicimos una sola app que se adapta a cada forma de ver, oír y comunicarse.</p>
+      <p class="source">Dato de la <a href="https://www.who.int/news-room/fact-sheets/detail/disability-and-health" rel="noopener" target="_blank">Organización Mundial de la Salud, 2023</a>.</p>
+    </div>
+  </section>
+
+  <section class="stop" id="ver" data-stop data-shape="street" aria-labelledby="ver-h">
+    <div class="panel">
+      <h2 id="ver-h">Te dice qué tienes enfrente.</h2>
+      <p>Apunta la cámara y la app reconoce personas, autos, semáforos y hasta 80 tipos de objetos. Te dice de qué lado están y a qué distancia, y solo habla cuando algo cambia.</p>
+      <div class="live">
+        <p class="say" id="ver-say" aria-hidden="true">Al frente hay un paso peatonal cerca y un semáforo a media distancia.</p>
+        <p class="sr" id="ver-live" aria-live="polite"></p>
+        <div class="live-ctl">
+          <button type="button" class="round" data-nudge="-0.6" aria-label="Girar la esquina a la izquierda"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3M4.5 4v4.2h4.2"/></svg></button>
+          <button type="button" class="round" data-nudge="0.6" aria-label="Girar la esquina a la derecha"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3M19.5 4v4.2h-4.2"/></svg></button>
+          <button type="button" class="tile-btn tile-sm" id="ver-listen"><span>Escuchar</span></button>
+        </div>
+        <p class="hint">Mueve el cursor para girar la esquina; en el celular, inclínalo o usa los botones.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="stop esquina" id="esquina" data-stop data-shape="none" data-cover aria-labelledby="esq-h">
+    <div class="esq-head">
+      <h2 id="esq-h">Gira la esquina en miniatura.</h2>
+      <p>Arrástrala, acércala o toca un objeto para oír qué es.</p>
+    </div>
+    <div class="street" id="street">
+      <div class="st-stage">
+        <canvas class="st-canvas" tabindex="0" role="application" aria-roledescription="esquina en 3D" aria-label="Esquina en miniatura que puedes girar" aria-describedby="st-help"></canvas>
+        <div class="st-labels" aria-hidden="true"></div>
+        <img class="st-fallback" src="/assets/photos/calle.jpg" alt="Una calle con personas y un camión" width="960" height="557" loading="lazy">
+        <p class="st-hint" aria-hidden="true"><span class="st-hand"></span>Arrastra para girar</p>
+      </div>
+      <div class="st-bar">
+        <p class="st-say" id="st-say" aria-hidden="true">Al frente hay un bote de basura y una puerta, lejos.</p>
+        <p class="sr" id="st-live" aria-live="polite"></p>
+        <div class="st-ctl" role="group" aria-label="Controles de la esquina">
+          <button type="button" class="round" data-st="left" aria-label="Girar a la izquierda"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3M4.5 4v4.2h4.2"/></svg></button>
+          <button type="button" class="round" data-st="right" aria-label="Girar a la derecha"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3M19.5 4v4.2h-4.2"/></svg></button>
+          <button type="button" class="round" data-st="in" aria-label="Acercar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+          <button type="button" class="round" data-st="out" aria-label="Alejar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button>
+          <button type="button" class="round" data-st="reset" aria-label="Volver a la vista inicial"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v4M12 17.5v4M2.5 12h4M17.5 12h4"/></svg></button>
+          <button type="button" class="tile-btn tile-sm" data-st="say"><span>Escuchar</span></button>
+        </div>
+      </div>
+      <p class="st-help" id="st-help">Arrastra para girar. Rueda o pellizco para acercar. Toca un objeto para oír qué es. Con teclado: flechas, más y menos, R para volver.</p>
+    </div>
+  </section>
+
+  <section class="stop" id="leer" data-stop data-shape="box" aria-labelledby="leer-h">
+    <div class="panel">
+      <h2 id="leer-h">Lee medicinas y carteles.</h2>
+      <p>Lee el texto en voz alta, encuentra la fecha de caducidad y te avisa si una medicina ya venció. La guarda en tu botiquín.</p>
+      <figure class="reading" aria-label="Ejemplo de lo que la app lee en una caja">
+        <p class="r-name">Paracetamol 500 mg</p>
+        <p>Caducidad: 05/2025</p>
+        <p class="r-warn">Caducó. No la uses.</p>
+        <figcaption>Ejemplo de lectura</figcaption>
+      </figure>
+      <button type="button" class="guide-link" id="leer-listen">Escuchar la lectura</button>
+    </div>
+  </section>
+
+  <section class="stop" id="oir" data-stop data-shape="waves" aria-labelledby="oir-h">
+    <div class="panel">
+      <h2 id="oir-h">Escribe lo que otros dicen.</h2>
+      <p>Convierte la conversación en letra grande, avisa de sonidos fuertes con vibración y destello, y sube el volumen de las voces en tus auriculares.</p>
+      <div class="mic">
+        <button type="button" class="tile-btn" id="mic-btn" aria-pressed="false"><span>Probar con mi voz</span></button>
+        <span class="level" aria-hidden="true"><i id="mic-level"></i></span>
+      </div>
+      <p class="mic-state" id="mic-state" aria-live="polite">Habla o da una palmada y mira cómo responden los puntos.</p>
+      <p class="note">El sonido se analiza en tu navegador. No se graba ni se envía.</p>
+    </div>
+  </section>
+
+  <section class="stop" id="hablar" data-stop data-shape="bubble" aria-labelledby="hab-h">
+    <div class="panel">
+      <h2 id="hab-h">Habla por ti con un toque.</h2>
+      <p>Tarjetas con frases que la app dice en voz alta. También traduce texto y voz a 12 idiomas cuando tienes internet.</p>
+      <div class="tiles" role="group" aria-label="Frases de ejemplo">
+        <button type="button" class="phrase" data-say="Quiero agua, por favor." data-word="AGUA">Quiero agua</button>
+        <button type="button" class="phrase" data-say="Necesito ayuda." data-word="AYUDA">Necesito ayuda</button>
+        <button type="button" class="phrase" data-say="Me duele." data-word="DOLOR">Me duele</button>
+        <button type="button" class="phrase" data-say="Muchas gracias." data-word="GRACIAS">Gracias</button>
+        <button type="button" class="phrase" data-say="Sí." data-word="SÍ">Sí</button>
+        <button type="button" class="phrase" data-say="No." data-word="NO">No</button>
+      </div>
+      <p class="talk-live" id="talk-live" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <section class="stop" id="ayuda" data-stop data-shape="pin" aria-labelledby="ayu-h">
+    <div class="panel">
+      <h2 id="ayu-h">Te acompaña cuando lo necesitas.</h2>
+      <ul class="facts">
+        <li><b>Mis personas.</b> Quién es quién en tu familia y entre tus cuidadores.</li>
+        <li><b>¿Quién soy?</b> Tu ficha médica y el botón «Estoy perdido».</li>
+        <li><b>Rutinas.</b> Recordatorios de medicina y de tareas.</li>
+        <li><b>SOS.</b> Prepara un mensaje con tu ubicación para tu contacto de emergencia.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="stop" id="medida" data-stop data-shape="aa" aria-labelledby="med-h">
+    <div class="panel">
+      <h2 id="med-h">Se adapta a ti.</h2>
+      <p>Letra grande, alto contraste, modo calma sin destellos, control por voz y botones más grandes. Pruébalo en esta misma página.</p>
+      <div class="prefs" role="group" aria-label="Probar ajustes en esta página">
+        <button type="button" class="switch" data-pref="big" aria-pressed="false"><span>Letra grande</span><i aria-hidden="true"></i></button>
+        <button type="button" class="switch" data-pref="hc" aria-pressed="false"><span>Alto contraste</span><i aria-hidden="true"></i></button>
+        <button type="button" class="switch" data-pref="calm" aria-pressed="false"><span>Modo calma</span><i aria-hidden="true"></i></button>
+      </div>
+    </div>
+  </section>
+
+  <section class="stop" id="datos" data-stop data-shape="shield" aria-labelledby="dat-h">
+    <div class="panel">
+      <h2 id="dat-h">Lo que ves se queda contigo.</h2>
+      <ul class="facts">
+        <li>La cámara se analiza en tu celular. Solo «Describir a detalle» envía una imagen, y no se guarda.</li>
+        <li>No guardamos fotos ni grabaciones. El historial es texto y se borra a los 90 días.</li>
+        <li>Tu contraseña se guarda cifrada y otras páginas no pueden leer tu sesión.</li>
+        <li>No usamos tu rostro, huella ni voz para identificarte.</li>
+        <li>El dictado y la traducción usan el servicio de tu navegador y necesitan internet.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="stop finale" id="empieza" data-stop data-shape="eye" aria-labelledby="fin-h">
+    <div class="panel">
+      <h2 id="fin-h">Empieza hoy.</h2>
+      <p>Crea tu cuenta, elige tu tipo de apoyo y deja que el celular te acompañe.</p>
+      <div class="actions">
+        <a class="tile-btn" href="/login.html?registro=1"><span>Crear cuenta</span></a>
+        <a class="guide-link" href="/login.html">Ya tengo cuenta</a>
+        <a class="guide-link apk-dl" href="https://github.com/JUANGr2/JUANGr2.github.io/releases/latest/download/visualapp.apk" download>Descargar para Android</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="info" id="dudas" data-stop data-shape="eye" data-alpha="0.14" aria-labelledby="faq-h">
+    <div class="info-col">
+      <h2 id="faq-h">Dudas frecuentes</h2>
+      <div class="faq">
+        <details><summary>¿Necesita internet?</summary><p>No para describir el entorno ni leer textos: la IA corre en tu celular. La primera vez se necesita internet para descargarla. Traducir y dictar por voz sí necesitan conexión.</p></details>
+        <details><summary>¿Puede equivocarse?</summary><p>Sí. Es un apoyo y sus resultados son orientativos. Para decisiones de seguridad, confirma con otra fuente.</p></details>
+        <details><summary>¿Reemplaza al bastón o al acompañante?</summary><p>No. No sustituye a tu bastón, perro guía, intérprete ni a quien te acompaña.</p></details>
+        <details><summary>¿Funciona en iPhone y Android?</summary><p>Funciona mejor en Chrome para Android o con la app instalada. En otros navegadores algunas funciones de voz pueden no estar disponibles.</p></details>
+      </div>
+      <h2 id="terms-h">Acuerdo de uso</h2>
+      <div class="terms" tabindex="0" role="region" aria-labelledby="terms-h">
+        <h3>1. Propósito</h3><p>VISUALAPP es una herramienta de apoyo. No sustituye bastón, perro guía, intérprete, cuidadores ni criterio propio, y no debe ser el único medio para decisiones de seguridad.</p>
+        <h3>2. Cámara y micrófono</h3><p>Se usan solo cuando los activas. La cámara se analiza en tu dispositivo. Si usas «Describir a detalle», un fotograma se envía a un servicio de IA para obtener la descripción y no se guarda. El dictado por voz usa el servicio de reconocimiento de tu navegador.</p>
+        <h3>3. Datos que guardamos</h3><p>Nombre, correo, perfil de apoyo, preferencias, contactos, frases, recordatorios y un historial de resultados en texto (se elimina a los 90 días y puedes borrarlo).</p>
+        <h3>4. Precisión</h3><p>La IA puede equivocarse al detectar objetos, leer o traducir. Los resultados son orientativos.</p>
+        <h3>5. SOS y ubicación</h3><p>El botón SOS abre las funciones de llamada o mensaje de tu teléfono; no garantiza contacto con servicios de emergencia.</p>
+        <h3>6. Tus derechos</h3><p>Puedes pedir la eliminación de tu cuenta y datos al administrador en cualquier momento.</p>
+        <h3>7. Uso responsable</h3><p>No grabes a terceros sin consentimiento ni uses la app con fines ilícitos.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="foot-mark">
+    <svg class="mark" viewBox="0 0 46 32" aria-hidden="true"><g class="mk-eye"><path class="mk-lid" d="M2 16C8 6 24 6 30 16C24 26 8 26 2 16Z"/><circle class="mk-pupil" cx="16" cy="16" r="4.6"/></g><path class="mk-arc a1" d="M33.5 12.5A5 5 0 0 1 33.5 19.5"/><path class="mk-arc a2" d="M36.4 9.6A9 9 0 0 1 36.4 22.4"/><path class="mk-arc a3" d="M39.2 6.8A13 13 0 0 1 39.2 25.2"/></svg>
+    <span class="foot-name">VISUALAPP</span>
+  </div>
+  <p class="braille" aria-hidden="true">⠧⠊⠎⠥⠁⠇⠁⠏⠏</p>
+  <p>Hecha para que nadie se quede fuera. © <span id="y"></span> VISUALAPP.</p>
+  <p class="credits" id="credits"></p>
+</footer>
+
+<script src="/js/core/store.js"></script>
+<script src="/js/core/localapi.js"></script>
+<script src="/js/core/api.js"></script>
+<script src="/js/core/tts.js"></script>
+<script src="/js/core/speech.js"></script>
+<script src="/js/ai/scene.js"></script>
+<script src="/js/pages/landing-ui.js"></script>
+<script src="/js/pages/home.js"></script>
+</body>
+</html>

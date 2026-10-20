@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+<title>Acceder · VISUALAPP</title>
+<meta name="theme-color" content="#16181b">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icons/icon.svg">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="VISUALAPP">
+<link rel="stylesheet" href="/css/styles.css">
+<script src="/js/pages/motion.js"></script>
+</head>
+<body>
+<header class="nav"><div class="wrap">
+  <a class="brand" href="/"><span class="logo" aria-hidden="true"><svg class="ic"><use href="/icons/sprite.svg#i-logo"/></svg></span>VISUALAPP</a>
+  <a class="btn plain sm" href="/">Inicio</a>
+</div></header>
+<main class="wrap auth">
+  <h1 class="large-title" id="title">Bienvenido</h1>
+  <p class="sub" id="sub">Inicia sesión para continuar.</p>
+  <div class="card">
+    <div class="seg" role="tablist" style="margin-bottom:6px">
+      <button role="tab" id="t-login" aria-selected="true">Iniciar sesión</button>
+      <button role="tab" id="t-reg" aria-selected="false">Crear cuenta</button>
+    </div>
+
+    <form id="f-login" novalidate>
+      <label for="l-email">Correo</label>
+      <input id="l-email" type="email" autocomplete="username" inputmode="email" required>
+      <label for="l-pass">Contraseña</label>
+      <input id="l-pass" type="password" autocomplete="current-password" required>
+      <button class="mt-20 btn primary block">Entrar</button>
+    </form>
+
+    <form id="f-reg" hidden novalidate>
+      <ol class="steps" id="r-steps" aria-label="Pasos para crear tu cuenta">
+        <li data-s="1" aria-current="step">Tus datos</li>
+        <li data-s="2">Tu apoyo</li>
+        <li data-s="3">El acuerdo</li>
+      </ol>
+      <h2 class="step-h" id="r-step-h" tabindex="-1">Paso 1 de 3: tus datos</h2>
+
+      <div class="r-step" data-step="1">
+        <label for="r-name">Nombre</label>
+        <input id="r-name" autocomplete="name" required>
+        <p class="field-err" id="r-name-err" hidden></p>
+        <label for="r-email">Correo</label>
+        <input id="r-email" type="email" autocomplete="username" inputmode="email" required>
+        <p class="field-err" id="r-email-err" hidden></p>
+        <label for="r-pass">Contraseña (mínimo 8 caracteres)</label>
+        <input id="r-pass" type="password" autocomplete="new-password" minlength="8" required>
+        <p class="field-err" id="r-pass-err" hidden></p>
+        <button class="mt-20 btn primary block" type="submit" id="r-next-1">Siguiente</button>
+      </div>
+
+      <div class="r-step" data-step="2" hidden>
+        <fieldset style="border:0;padding:0;margin:0">
+          <legend class="step-note">¿Qué apoyo necesitas? Puedes elegir varios o ninguno.</legend>
+          <div class="stack" style="gap:8px">
+            <label class="opt"><input type="checkbox" name="prof" value="visual"> Ceguera (necesito que me describan el entorno)</label>
+            <label class="opt"><input type="checkbox" name="prof" value="baja_vision"> Baja visión o daltonismo</label>
+            <label class="opt"><input type="checkbox" name="prof" value="auditiva"> Sordera o poca audición</label>
+            <label class="opt"><input type="checkbox" name="prof" value="memoria"> Alzheimer, demencia o problemas de memoria</label>
+            <label class="opt"><input type="checkbox" name="prof" value="epilepsia"> Epilepsia o sensibilidad a destellos</label>
+            <label class="opt"><input type="checkbox" name="prof" value="motriz"> Parkinson, temblor o movilidad reducida</label>
+            <label class="opt"><input type="checkbox" name="prof" value="cognitiva"> Autismo, del habla o cognitiva</label>
+            <label class="opt"><input type="checkbox" name="prof" value="lectura"> Dislexia o dificultad de lectura</label>
+          </div>
+        </fieldset>
+        <div class="row step-nav">
+          <button class="btn" type="button" id="r-back-2" data-back-step>Atrás</button>
+          <button class="btn primary" type="submit" id="r-next-2">Siguiente</button>
+        </div>
+      </div>
+
+      <div class="r-step" data-step="3" hidden>
+        <p class="step-note">Lee el <a href="/#acuerdo" target="_blank" rel="noopener">acuerdo de uso</a>: dice qué datos se guardan y cómo se cuidan.</p>
+        <label class="opt"><input id="r-terms" type="checkbox"> <span>Acepto el acuerdo de uso</span></label>
+        <p class="field-err" id="r-terms-err" hidden></p>
+        <div class="row step-nav">
+          <button class="btn" type="button" id="r-back-3" data-back-step>Atrás</button>
+          <button class="btn primary" type="submit" id="r-create">Crear cuenta</button>
+        </div>
+      </div>
+    </form>
+    <div id="msg" role="alert" aria-live="assertive"></div>
+  </div>
+</main>
+<script src="/js/core/store.js"></script>
+<script src="/js/core/localapi.js"></script>
+<script src="/js/core/api.js"></script>
+<script src="/js/core/signup.js"></script>
+<script src="/js/pages/login.js"></script>
+<script src="/js/pages/intro.js"></script>
+</body>
+</html>
