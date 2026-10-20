@@ -74,6 +74,7 @@ const Panel = (() => {
       if (!start) return;
       const s = start; start = null;
       if (!dragged) return;                                       // fue un toque: lo resuelve el clic
+      setTimeout(() => { dragged = false; }, 0);                  // con el dedo no llega «click» tras arrastrar: sin esto, el siguiente Enter o doble toque de TalkBack se perdería
       root.classList.remove('dragging');
       root.style.transform = '';
       const y = Math.min(s.s.closed, Math.max(s.s.full, s.top + (e.clientY - s.y)));
