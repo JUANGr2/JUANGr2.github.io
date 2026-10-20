@@ -214,6 +214,7 @@ async function setupOnboarding() {
   const card = $('#onb');
   const mark = (k, ok) => { const li = $(`#onb-list [data-k="${k}"]`); if (li) li.classList.toggle('done', ok); };
   async function permsOk() {
+    if (isNative()) return store.get('va_camok') === '1';     // Android dice «prompt» aunque la app tenga el permiso: vale la cámara que ya abrió
     try {
       const r = await Promise.all(['camera', 'microphone'].map(n => navigator.permissions.query({ name: n })));
       return r.every(x => x.state === 'granted');
