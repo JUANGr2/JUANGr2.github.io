@@ -8,8 +8,9 @@ api('/auth/me').then(u => {
   a.href = u.role === 'admin' ? '/admin.html' : '/app.html';
 }).catch(() => {});
 
-// app instalada (modo local): directo a la app o al acceso, sin landing
-if (typeof LOCAL !== 'undefined' && LOCAL) {
+// app instalada (APK): directo a la app o al acceso, sin landing. En la página publicada (también sin servidor) se ve la portada
+const installedApp = !!(window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()) || (location.protocol === 'https:' && location.hostname === 'localhost');
+if (installedApp) {
   api('/auth/me').then(() => location.replace('/app.html')).catch(() => location.replace('/login.html'));
 }
 
