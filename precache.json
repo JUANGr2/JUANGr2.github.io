@@ -1,5 +1,5 @@
 {
- "version": "b86e171127",
+ "version": "5debc108a5",
  "shell": [
   "/admin.html",
   "/app.html",
@@ -14,8 +14,11 @@
   "/icons/sprite.svg",
   "/index.html",
   "/js/ai/camera.js",
+  "/js/ai/clip.js",
+  "/js/ai/clip.worker.js",
   "/js/ai/detector.worker.js",
   "/js/ai/guard.js",
+  "/js/ai/look.js",
   "/js/ai/medparse.js",
   "/js/ai/ocr.js",
   "/js/ai/scanner.js",
@@ -54,6 +57,13 @@
   "/"
  ],
  "ai": [
+  "/vendor/clip/labels.json",
+  "/vendor/clip/mobileclip_s0/config.json",
+  "/vendor/clip/mobileclip_s0/onnx/vision_model.onnx",
+  "/vendor/clip/mobileclip_s0/preprocessor_config.json",
+  "/vendor/clip/ort-wasm-simd-threaded.jsep.mjs",
+  "/vendor/clip/ort-wasm-simd-threaded.jsep.wasm",
+  "/vendor/clip/transformers.min.js",
   "/vendor/coco/group1-shard1of5.bin",
   "/vendor/coco/group1-shard2of5.bin",
   "/vendor/coco/group1-shard3of5.bin",

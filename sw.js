@@ -1,5 +1,5 @@
 // Service worker: funciona sin internet. Precachea la app y, aparte, la IA local.
-const VERSION = 'b86e171127';
+const VERSION = '5debc108a5';
 const SHELL_CACHE = 'va-shell-' + VERSION;
 const AI_CACHE = 'va-ai-v1';
 
@@ -59,8 +59,8 @@ self.addEventListener('fetch', e => {
   const u = new URL(req.url);
   if (req.method !== 'GET' || u.origin !== location.origin || u.pathname.startsWith('/api/')) return;
 
-  // IA: primero caché (pesa mucho y no cambia)
-  if (u.pathname.startsWith('/vendor/')) {
+  // IA: primero caché (pesa mucho y no cambia); sus .json (etiquetas, configuración) son chicos y pueden cambiar: van por la red
+  if (u.pathname.startsWith('/vendor/') && !u.pathname.endsWith('.json')) {
     e.respondWith((async () => {
       const hit = await caches.match(req, { cacheName: AI_CACHE });
       if (hit) return hit;

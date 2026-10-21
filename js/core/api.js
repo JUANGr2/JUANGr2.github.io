@@ -3,16 +3,22 @@ const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-// Modo local: dentro del APK (Capacitor) o con ?local=1 todo vive en el teléfono, sin servidor.
+// Dentro del APK (Capacitor): los archivos ya están en el teléfono.
+const IN_APP = (() => {
+  try {
+    const cap = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
+    const shell = location.protocol === 'https:' && location.hostname === 'localhost';   // esquema del WebView de Capacitor
+    return !!(cap || shell);
+  } catch { return false; }
+})();
+// Modo local: dentro del APK, en la web publicada o con ?local=1 todo vive en el teléfono, sin servidor.
 const LOCAL = (() => {
   try {
     const qs = new URLSearchParams(location.search).get('local');
     if (qs === '1') localStorage.setItem('va_mode', 'local');
     if (qs === '0') localStorage.removeItem('va_mode');
-    const cap = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
-    const shell = location.protocol === 'https:' && location.hostname === 'localhost';   // esquema del WebView de Capacitor
     const pages = /\.github\.io$/i.test(location.hostname);                               // página publicada sin servidor (GitHub Pages)
-    return !!(cap || shell || pages || localStorage.getItem('va_mode') === 'local');
+    return !!(IN_APP || pages || localStorage.getItem('va_mode') === 'local');
   } catch { return false; }
 })();
 const localApi = LOCAL && typeof LocalAPI !== 'undefined' ? LocalAPI.create(Store.local) : null;
@@ -135,7 +141,8 @@ function applyPrefs(p) {
   document.documentElement.style.setProperty('--fs', (p.font_size || 18) + 'px');
 }
 
-if ('serviceWorker' in navigator && !LOCAL) {
+// fuera del APK (con servidor o en la web publicada) el service worker guarda la app y la IA para abrir sin internet
+if ('serviceWorker' in navigator && !IN_APP) {
   addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').then(reg => {
       // descarga la IA en segundo plano para usarla sin internet

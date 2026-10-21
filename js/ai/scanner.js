@@ -158,6 +158,7 @@ const Scanner = (() => {
       running = true;
       Scene.reset();
       begin();                                          // no se espera: el botón no queda bloqueado
+      startClip();                                      // la IA del lugar se carga ahora, en segundo plano (no antes de abrir la cámara)
     })().finally(() => { starting = null; });
     return starting;
   }
@@ -180,9 +181,22 @@ const Scanner = (() => {
   }
 
   // detiene bucle y libera la cámara
+  // la IA que reconoce el lugar (Clip): solo en modo Escena, con una imagen chica del video
+  let lastView = null;
+  function startClip() {
+    if (typeof Clip === 'undefined') return;
+    Clip.start({
+      grab: () => (running && !paused && mode === 'escena' && video && video.videoWidth
+        ? createImageBitmap(video, { resizeWidth: 320, resizeHeight: Math.round(320 * video.videoHeight / video.videoWidth) }) : null),
+      onResult: v => { lastView = v; },
+    });
+  }
+
   function halt() {
     running = false; paused = false;
     gen++;
+    lastView = null;
+    if (typeof Clip !== 'undefined') Clip.stop();
     readToken++;
     clearTimeout(timer); timer = null; busy = false;
     if (stream) stream.getTracks().forEach(t => t.stop());
@@ -284,7 +298,7 @@ const Scanner = (() => {
       return;
     }
 
-    const r = Scene.update(preds, video, W, H, { flipX: !!(camInfo && camInfo.mirrored) });
+    const r = Scene.update(preds, video, W, H, { flipX: !!(camInfo && camInfo.mirrored), view: lastView });
     cb.hud(r.hud);
     if (r.speak) {
       cb.narrate(r.speak, { urgent: !!r.urgent });
@@ -450,6 +464,8 @@ const Scanner = (() => {
   }
 
   async function setMode(m) {
+    if (typeof Clip !== 'undefined') Clip.bump();
+    lastView = null;
     if (m === mode) return;
     const prevText = TEXT_MODES.has(mode);
     mode = m;
@@ -469,6 +485,8 @@ const Scanner = (() => {
 
   // cambia de cámara; same: se abrió el mismo dispositivo (solo hay una)
   async function flip() {
+    if (typeof Clip !== 'undefined') Clip.bump();
+    lastView = null;
     const prev = camInfo && camInfo.deviceId, prevFacing = facing;
     facing = facing === 'environment' ? 'user' : 'environment';
     if (!running) { Camera.save({ facing }); return { facing, same: false }; }
@@ -518,6 +536,6 @@ const Scanner = (() => {
 
   return {
     start, stop: halt, flip, setMode, readText, captureStill, snapshot, diagnose, resetAI, preload, pause, resume, summary: () => Scene.summary(),
-    get running() { return running; }, get paused() { return paused; }, get mode() { return mode; }, get facing() { return facing; }, get lastLines() { return lastLines; }, get lastAdvice() { return lastAdvice; }, get lastStill() { return lastStill; },
+    get running() { return running; }, get view() { return lastView; }, get paused() { return paused; }, get mode() { return mode; }, get facing() { return facing; }, get lastLines() { return lastLines; }, get lastAdvice() { return lastAdvice; }, get lastStill() { return lastStill; },
   };
 })();

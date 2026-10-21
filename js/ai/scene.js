@@ -22,7 +22,7 @@ const Scene = (() => {
     carrot: ['zanahoria', 'zanahorias', 'f'], 'hot dog': ['hot dog', 'hot dogs', 'm'], pizza: ['pizza', 'pizzas', 'f'], donut: ['dona', 'donas', 'f'],
     cake: ['pastel', 'pasteles', 'm'], chair: ['silla', 'sillas', 'f'], couch: ['sofá', 'sofás', 'm'], 'potted plant': ['planta', 'plantas', 'f'],
     bed: ['cama', 'camas', 'f'], 'dining table': ['mesa', 'mesas', 'f'], toilet: ['inodoro', 'inodoros', 'm'], tv: ['televisor', 'televisores', 'm'],
-    laptop: ['computadora portátil', 'computadoras portátiles', 'f'], mouse: ['ratón', 'ratones', 'm'], remote: ['control remoto', 'controles remotos', 'm'],
+    laptop: ['laptop', 'laptops', 'f'], mouse: ['mouse', 'mouses', 'm'], monitor: ['monitor', 'monitores', 'm'], aire: ['aire acondicionado', 'aires acondicionados', 'm'], remote: ['control remoto', 'controles remotos', 'm'],
     keyboard: ['teclado', 'teclados', 'm'], 'cell phone': ['celular', 'celulares', 'm'], microwave: ['microondas', 'microondas', 'm'],
     oven: ['horno', 'hornos', 'm'], toaster: ['tostadora', 'tostadoras', 'f'], sink: ['lavabo', 'lavabos', 'm'], refrigerator: ['refrigerador', 'refrigeradores', 'm'],
     book: ['libro', 'libros', 'm'], clock: ['reloj', 'relojes', 'm'], vase: ['florero', 'floreros', 'm'], scissors: ['tijeras', 'tijeras', 'f'],
@@ -82,6 +82,20 @@ const Scene = (() => {
     return parts.join(' ');
   }
   const colorName = (r, g, b) => { const c = colorParts(r, g, b); return c.base + (c.tone ? ' ' + c.tone : ''); };
+  // color dominante de una zona: el nombre de color que más se repite, promediando solo esos píxeles
+  // (el promedio de todo mezcla: un teclado negro con letras blancas saldría gris). pixels: RGBA plano
+  function modalColor(pixels) {
+    const bins = new Map();
+    for (let i = 0; i + 2 < pixels.length; i += 4) {
+      const r = pixels[i], g = pixels[i + 1], b = pixels[i + 2], k = colorName(r, g, b);
+      const s = bins.get(k) || [0, 0, 0, 0];
+      s[0] += r; s[1] += g; s[2] += b; s[3]++;
+      bins.set(k, s);
+    }
+    let best = null;
+    for (const s of bins.values()) if (!best || s[3] > best[3]) best = s;
+    return best ? [best[0] / best[3], best[1] / best[3], best[2] / best[3]] : null;
+  }
 
   // ---- muestreo de la imagen (solo en el navegador) ----
   const sampler = HAS_DOM ? document.createElement('canvas') : null;
@@ -92,13 +106,9 @@ const Scene = (() => {
       const vw = video.videoWidth, vh = video.videoHeight;
       const cx = Math.max(0, x + w * 0.25), cy = Math.max(0, y + h * 0.25);
       const cw = Math.max(2, Math.min(vw - cx, w * 0.5)), ch = Math.max(2, Math.min(vh - cy, h * 0.5));
-      sampler.width = 8; sampler.height = 8;
-      sctx.drawImage(video, cx, cy, cw, ch, 0, 0, 8, 8);
-      const d = sctx.getImageData(0, 0, 8, 8).data;
-      let r = 0, g = 0, b = 0;
-      for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; }
-      const n = d.length / 4;
-      return [r / n, g / n, b / n];
+      sampler.width = 16; sampler.height = 16;
+      sctx.drawImage(video, cx, cy, cw, ch, 0, 0, 16, 16);
+      return modalColor(sctx.getImageData(0, 0, 16, 16).data);
     } catch { return null; }
   }
   function brightness(video) {
@@ -281,6 +291,24 @@ const Scene = (() => {
   const ABSENT_MS = 4000, PERSIST_MS = 2000, LIGHT_PERSIST_MS = 3000, LIGHT_REARM_MS = 30000, HINT_PERSIST_MS = 5000, HINT_WINDOW_MS = 10000, MIN_GAP_MS = 2500;
   const DANGER_AREA = 0.2, DANGER_REPEAT_MS = 20000, DANGER_REARM_MS = 4000;
   let ann, seen, cand, danger, lightWarned, lightCand, lightSince, hintSaid, hintCand, hintSince, lastSpokeAt, firstDone, last;
+  let viewHist, viewAt, viewSaid, placeSaidAt;   // lo que aporta la IA del lugar (MobileCLIP): historial, anuncios y el piso
+  const VIEW_REPEAT_MS = 60000, PLACE_REPEAT_MS = 60000;
+  // lo que la IA del lugar ve con su nombre equivale a estas clases de COCO (si COCO ya lo ve, lo dice COCO)
+  const EQUIV = { aire: ['aire'], monitor: ['monitor', 'tv'], silla: ['chair'], laptop: ['laptop'], mouse: ['mouse'], teclado: ['keyboard'],
+    celular: ['cell phone'], persona: ['person'], botella: ['bottle'], mochila: ['backpack'], mesa: ['dining table'] };
+  // confusiones típicas de COCO dentro del laboratorio: se callan si la IA del lugar ve un objeto y no las tiene entre sus 3 primeras
+  const SUSPECT = { toilet: 'inodoro', truck: 'camion', suitcase: 'maleta', bench: 'banca', book: 'libro' };
+  // lo que cabe en un salón; con la IA del lugar segura de estar ante un objeto del salón, el resto de COCO (microondas,
+  // refrigerador, corbata…) es confusión y se calla
+  const LAB_OK = new Set(['person', 'chair', 'keyboard', 'mouse', 'laptop', 'cell phone', 'tv', 'bottle', 'backpack', 'dining table',
+    'cup', 'handbag', 'clock', 'potted plant', 'scissors', 'remote', ...Object.keys(SUSPECT)]);
+  function relabel(preds, view) {
+    const ids = new Set(view && view.ranked ? view.ranked.map(r => r.id) : []);
+    const top = view && view.ranked && view.ranked[0] ? view.ranked[0].id : null;
+    const inLab = !!(view && view.main && view.main.kind !== 'other' && view.score >= 0.6);   // un objeto o una parte del salón
+    return preds.filter(p => !(inLab && (!LAB_OK.has(p.class) || (SUSPECT[p.class] && !ids.has(SUSPECT[p.class])))))
+      .map(p => (p.class !== 'tv' ? p : { ...p, class: top === 'aire' ? 'aire' : top === 'televisor' ? 'tv' : 'monitor' }));
+  }
   function reset() {
     tracks = []; nextId = 1;
     ann = new Map();       // clase -> { count, bucket, zone, dist } tal como se dijo
@@ -290,6 +318,7 @@ const Scene = (() => {
     lightWarned = null; lightCand = undefined; lightSince = -Infinity;   // lightWarned: 'poca' u 'oscuro' ya dicho
     hintSaid = null; hintCand = undefined; hintSince = -Infinity;
     lastSpokeAt = -Infinity; firstDone = false;
+    viewHist = []; viewAt = undefined; viewSaid = new Map(); placeSaidAt = -Infinity;
     last = { visible: [], W: 1, H: 1, flipX: false, sampler: null, hint: null };
   }
   reset();
@@ -321,7 +350,9 @@ const Scene = (() => {
   const crowdText = (c, intro) => { const [, plur, gen] = noun(c.cls); return `${intro} ${countWord(gen, c.count)} ${plur} a tu alrededor.`; };
 
   // Devuelve { hud, speak?, urgent?, label? }
-  function update(preds, video, W, H, { speakNow = true, now = Date.now(), flipX = false, light, sample } = {}) {
+  function update(preds, video, W, H, { speakNow = true, now = Date.now(), flipX = false, light, sample, view = null } = {}) {
+    preds = relabel(preds, view);
+    if (view && view.at !== viewAt) { viewAt = view.at; viewHist.push(view.main ? view.main.id : null); if (viewHist.length > 3) viewHist.shift(); }
     track(preds, now);
     const L = level;
     const sampler = sample || (HAS_DOM && video && video.videoWidth ? (x, y, w, h) => dominant(video, x, y, w, h) : null);
@@ -332,7 +363,7 @@ const Scene = (() => {
     const visible = present.filter(t => !attached.has(t.id));    // lo que lleva una persona no se lista aparte
     const recent = [...seen].filter(([, t]) => now - t <= HINT_WINDOW_MS).map(([c]) => c);
     const hint = L.hint ? placeHint(recent) : null;
-    last = { visible, W, H, flipX, sampler, hint };
+    last = { visible, W, H, flipX, sampler, hint, view };
     const allNow = groupsOf(tracks.filter(t => t.misses === 0), W, H, null, false, flipX);
     const hud = allNow.length ? describeGroups(allNow, L.items) : 'No detecto objetos claros.';
 
@@ -420,6 +451,27 @@ const Scene = (() => {
         if (said.length) msgs.push({ pri: 3, text: `Ya no veo ${listJoin(said.slice(0, 2).map(bye))}.`, apply: drop(said) });
       }
     }
+    // lo principal que ve la IA del lugar y COCO no: cuando lo confirma dos análisis seguidos, una vez (otra si vuelve tras 60 s)
+    const vid = viewHist.length >= 2 && viewHist[viewHist.length - 1] && viewHist[viewHist.length - 1] === viewHist[viewHist.length - 2] ? viewHist[viewHist.length - 1] : null;
+    if (vid && view && view.main && view.main.id === vid && view.main.kind === 'place' && vid !== 'piso') {   // el techo, la pared…
+      const prev = viewSaid.get(vid), m = view.main;
+      if (prev == null || now - prev > VIEW_REPEAT_MS) msgs.push({ pri: 0.5, text: `Se ve ${def(m.gen, false)} ${m.sing}.`, apply: () => { viewSaid.set(vid, now); firstDone = true; } });
+      else viewSaid.set(vid, now);
+    }
+    if (vid && view && view.main && view.main.id === vid && view.main.kind === 'object') {
+      const coco = new Set(visible.map(t => t.cls)), dup = (EQUIV[vid] || []).some(c => coco.has(c));
+      const prev = viewSaid.get(vid);
+      if (!dup && (prev == null || now - prev > VIEW_REPEAT_MS)) {
+        const m = view.main, rgb = sampler ? sampler(W * 0.3, H * 0.3, W * 0.4, H * 0.4) : null;
+        const col = rgb ? colorText(colorParts(...rgb), m.gen, false) : '';
+        msgs.push({ pri: 0.5, text: `Al frente hay ${indef(m.gen, false)} ${m.sing}${col ? ' ' + col : ''}.`, apply: () => { viewSaid.set(vid, now); firstDone = true; } });
+      } else if (prev != null) viewSaid.set(vid, now);          // sigue a la vista: no se repite
+    }
+    // el piso, con su color: como máximo una vez por minuto
+    if (view && view.place && view.place.piso && now - placeSaidAt >= PLACE_REPEAT_MS) {
+      const rgb = sampler ? sampler(0, H * 0.8, W, H * 0.2) : null;
+      msgs.push({ pri: 4.5, text: `El piso es de cerámica${rgb ? ' ' + colorText(colorParts(...rgb), 'm', false) : ''}.`, apply: () => { placeSaidAt = now; } });
+    }
     // pista de lugar nueva, si se mantiene 5 s
     if (firstDone && hint && hint !== hintSaid && now - hintSince >= HINT_PERSIST_MS) msgs.push({ pri: 4, text: HINTS[hint], apply: () => { hintSaid = hint; } });
 
@@ -437,11 +489,16 @@ const Scene = (() => {
   // resumen para «¿Qué hay?»: todo lo presente, aunque ya se haya dicho (al menos con detalle normal)
   function summary() {
     const L = level === LEVELS.breve ? LEVELS.normal : level;
-    const { visible, W, H, flipX, sampler, hint } = last;
+    const { visible, W, H, flipX, sampler, hint, view } = last;
     const groups = groupsOf(visible, W, H, sampler, L.colors, flipX);
-    if (!groups.length) return 'No veo objetos claros ahora.';
+    // lo que aporta la IA del lugar: lo principal (si COCO no lo ve ya) y las partes del lugar
+    const coco = new Set(visible.map(t => t.cls)), m = view && view.main;
+    const main = m && m.kind === 'object' && !(EQUIV[m.id] || []).some(c => coco.has(c)) ? `Al frente hay ${indef(m.gen, false)} ${m.sing}.` : '';
+    const parts = view && view.place ? Object.values(view.place).map(x => `${def(x.label.gen, false)} ${x.label.sing}`) : [];
+    const lugar = parts.length ? `Se ve ${listJoin(parts)}.` : '';
+    if (!groups.length) return [main, lugar].filter(Boolean).join(' ') || 'No veo objetos claros ahora.';
     const crowds = [...classesOf(visible, W, H, flipX).values()].filter(isCrowd), crowdSet = new Set(crowds.map(c => c.cls));
-    return [...crowds.map(c => crowdText(c, 'Hay')), describeGroups(groups.filter(g => !crowdSet.has(g.cls)), L.items - crowds.length, L), hint ? HINTS[hint] : ''].filter(Boolean).join(' ');
+    return [...crowds.map(c => crowdText(c, 'Hay')), describeGroups(groups.filter(g => !crowdSet.has(g.cls)), L.items - crowds.length, L), main, lugar, hint ? HINTS[hint] : ''].filter(Boolean).join(' ');
   }
 
   // color central para el modo «Color»
@@ -468,6 +525,6 @@ const Scene = (() => {
     return describeGroups(groupsOf(ts, W, H, sampler, !!sampler));
   }
 
-  return { update, reset, configure, summary, placeHint, centerColor, name, describe, alertPhrase, DANGER, NOUNS: N, _t: { colorName, colorText, phrase, listJoin, lightSentence } };
+  return { update, reset, configure, summary, placeHint, centerColor, name, describe, alertPhrase, DANGER, NOUNS: N, _t: { colorName, colorText, phrase, listJoin, lightSentence, modalColor } };
 })();
 if (typeof module !== 'undefined' && module.exports) module.exports = Scene;

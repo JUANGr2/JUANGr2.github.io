@@ -642,7 +642,7 @@ $('#s-simple').onchange = e => {
   renderPanel();
 };
 // ---------- diagnóstico ----------
-const diagState = () => ({ scanner: Scanner.diagnose(), voice: { engine: Speech.engine, lang: Speech.lang, ok: Speech.ok }, screenReader: TTS.screenReaderOn, online: navigator.onLine });
+const diagState = () => ({ clip: typeof Clip !== 'undefined' ? { state: Clip.state, inferMs: Clip.stats.inferMs } : undefined, scanner: Scanner.diagnose(), voice: { engine: Speech.engine, lang: Speech.lang, ok: Speech.ok }, screenReader: TTS.screenReaderOn, online: navigator.onLine });
 Speech.onfail = () => toast('La voz no responde. Revisa Ajustes → Diagnóstico.', 6000);
 // solo cambia el texto que cambió: reescribir la lista haría que TalkBack pierda el foco
 function renderDiag() {
