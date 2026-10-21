@@ -460,7 +460,7 @@ export function mount({ canvas, labelsEl, prefs = {} }) {
       cx = w / 2; cy = h * (a < 0.8 ? 0.31 : 0.33);
       k = Math.min((w * 0.42) / (HALF_W * unit), (h * 0.2) / (HALF_H * unit));
     } else {
-      const panel = document.querySelector('.stop.hero .panel');
+      const panel = document.querySelector('.stop.hero .stop-panel');
       const left = Math.min(panel ? panel.getBoundingClientRect().right + 28 : w * 0.5, w * 0.64);
       const half = (w - 28 - left) / 2;
       cx = left + half; cy = h * 0.5;

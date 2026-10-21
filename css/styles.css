@@ -211,7 +211,7 @@ body.landing{
   color-scheme:light;
 }
 body.landing.hc{--bg:#000;--surface:#000;--surface2:#161616;--surface3:#5a5a5a;--ink:#fff;--mute:#fff;--accent:#ffe600;--on-accent:#000;--guide:#ffe600;--alert:#ff7a70}
-body.landing.hc .panel,body.landing.hc .reading,body.landing.hc .phrase,body.landing.hc .switch{outline:2px solid #fff;outline-offset:-2px}
+body.landing.hc .stop-panel,body.landing.hc .reading,body.landing.hc .phrase,body.landing.hc .switch{outline:2px solid #fff;outline-offset:-2px}
 body.calm *,body.calm *::before,body.calm *::after{animation:none!important;transition:none!important}
 body.no-scroll{overflow:hidden}
 body.landing .sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
@@ -251,7 +251,8 @@ body.landing .top.menu-open .mb-top{transform:translateY(4px) rotate(45deg)}
 body.landing .top.menu-open .mb-bot{transform:translateY(-4px) rotate(-45deg)}
 body.landing .enter{display:inline-flex;align-items:center;min-height:48px;padding:0 16px;border-radius:999px;color:var(--ink);font-weight:700;text-decoration:none;transition:background-color .15s}
 body.landing .enter:hover{background:var(--surface2)}
-@media (max-width:520px){body.landing .enter{display:none}}
+/* en el celular también: es la puerta para iniciar sesión; más angosto para que quepa junto a «Aa» y el menú */
+@media (max-width:520px){body.landing .enter{padding:0 10px}}
 body.landing .progress{position:absolute;left:0;right:0;bottom:0;height:3px;display:none;pointer-events:none}
 body.landing .progress i{display:block;height:100%;background:var(--accent);transform-origin:left;transform:scaleX(0)}
 @media (max-width:1099px){body.landing .progress{display:block}}
@@ -302,8 +303,8 @@ body.landing main{position:relative;z-index:2}
 body.landing .stop{position:relative;display:flex;align-items:center;min-height:135vh;min-height:135svh;padding:110px max(var(--gutter),env(safe-area-inset-right)) 90px max(var(--gutter),env(safe-area-inset-left))}
 @media (min-width:1100px){body.landing .stop{padding-left:clamp(150px,11vw,200px)}}
 body.landing .stop.hero{min-height:100vh;min-height:100svh}
-body.landing .panel{position:relative;max-width:34rem}
-body.landing .hero .panel{max-width:40rem}
+body.landing .stop-panel{position:relative;max-width:34rem}
+body.landing .hero .stop-panel{max-width:40rem}
 body.landing h1,body.landing h2{font-weight:800;letter-spacing:-.02em;line-height:1.03;text-wrap:balance}
 body.landing .stop h1{font-size:clamp(2.5rem,6.2vw,5.6rem);max-width:12ch}
 body.landing .stop h2{font-size:clamp(2rem,4.4vw,3.6rem);max-width:15ch}
@@ -317,15 +318,15 @@ body.landing .split-on .w{display:inline-block;animation:wIn .7s var(--ease) bot
 
 /* escritorio angosto: columna de texto más estrecha para dejar sitio a la figura */
 @media (min-aspect-ratio:5/4) and (max-width:1279px){
-  body.landing .panel{max-width:28rem}
-  body.landing .hero .panel{max-width:32rem}
+  body.landing .stop-panel{max-width:28rem}
+  body.landing .hero .stop-panel{max-width:32rem}
   body.landing .stop h1{font-size:clamp(2.3rem,5.4vw,4.4rem)}
   body.landing .stop h2{font-size:clamp(1.9rem,3.8vw,3rem)}
 }
 /* celular y tableta en vertical: la figura arriba y el texto abajo, sobre un panel */
 @media (max-aspect-ratio:5/4){
   body.landing .stop{align-items:flex-end;padding-bottom:max(24px,env(safe-area-inset-bottom))}
-  body.landing .panel,body.landing .hero .panel{max-width:40rem;width:100%;margin:0 auto;padding:22px 20px 24px;border-radius:24px;background:color-mix(in srgb,var(--bg) 86%,transparent)}
+  body.landing .stop-panel,body.landing .hero .stop-panel{max-width:40rem;width:100%;margin:0 auto;padding:22px 20px 24px;border-radius:24px;background:color-mix(in srgb,var(--bg) 86%,transparent)}
   body.landing .stop h1{max-width:none}
 }
 
@@ -365,7 +366,7 @@ body.landing .mic{display:flex;flex-wrap:wrap;align-items:center;gap:16px;margin
 body.landing .level{flex:1;min-width:120px;max-width:220px;height:10px;border-radius:99px;background:var(--surface2);overflow:hidden}
 body.landing .level i{display:block;height:100%;background:var(--accent);transform-origin:left;transform:scaleX(0)}
 body.landing .mic-state{font-weight:700}
-body.landing #oir.alert .panel{animation:alertRing 1s var(--ease)}
+body.landing #oir.alert .stop-panel{animation:alertRing 1s var(--ease)}
 @keyframes alertRing{0%,100%{outline:0 solid transparent}15%{outline:6px solid var(--accent);outline-offset:10px}}
 
 /* Hablar: tarjetas de frases */

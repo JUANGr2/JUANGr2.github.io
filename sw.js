@@ -1,5 +1,5 @@
 // Service worker: funciona sin internet. Precachea la app y, aparte, la IA local.
-const VERSION = '5debc108a5';
+const VERSION = 'c5d074e6a5';
 const SHELL_CACHE = 'va-shell-' + VERSION;
 const AI_CACHE = 'va-ai-v1';
 

@@ -295,7 +295,8 @@ const Scene = (() => {
   const VIEW_REPEAT_MS = 60000, PLACE_REPEAT_MS = 60000;
   // lo que la IA del lugar ve con su nombre equivale a estas clases de COCO (si COCO ya lo ve, lo dice COCO)
   const EQUIV = { aire: ['aire'], monitor: ['monitor', 'tv'], silla: ['chair'], laptop: ['laptop'], mouse: ['mouse'], teclado: ['keyboard'],
-    celular: ['cell phone'], persona: ['person'], botella: ['bottle'], mochila: ['backpack'], mesa: ['dining table'] };
+    celular: ['cell phone'], persona: ['person'], botella: ['bottle'], mochila: ['backpack'], mesa: ['dining table'],
+    computadora: ['monitor', 'tv', 'keyboard', 'laptop'] };
   // confusiones típicas de COCO dentro del laboratorio: se callan si la IA del lugar ve un objeto y no las tiene entre sus 3 primeras
   const SUSPECT = { toilet: 'inodoro', truck: 'camion', suitcase: 'maleta', bench: 'banca', book: 'libro' };
   // lo que cabe en un salón; con la IA del lugar segura de estar ante un objeto del salón, el resto de COCO (microondas,
